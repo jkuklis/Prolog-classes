@@ -431,3 +431,186 @@ rozdzielWynik([(Ident, Suma, Ile) | W], [Ident|LI], [Suma|LS]) :- Ile > 1, rozdz
 
 exampleTree2(tree(tree(nil, d(2,3), tree(nil, d(2,5), nil)), d(4,3), tree(nil, d(1,3), tree(nil, d(4,1), nil)))).
 
+
+sciezka(a,b).
+
+sciezka(b,c).
+
+sciezka(a,c).
+
+sciezka(c,a).
+
+sciezka(c,d).
+
+connect1way(A,B) :- sciezka(A,B).
+
+connect1way(A,B) :- sciezka(A,C), connect1way(C,B).
+
+connect(A,B) :- connect1way(A,B).
+
+connect(A,B) :- connect1way(B,A).
+
+
+connect(G, A, B) :- member((A,B), G).
+
+connect(G, A, B) :- member((A,C), G), connect(G, C, B).
+
+
+path(A, B, [A, B]) :- sciezka(A,B).
+
+path(A, B, [A, C | P]) :- sciezka(A,C), path(C, B, [C | P]).
+
+
+pathC(A, B, P) :- pathC(A, B, [A], P).
+
+pathC(A, B, _, [A, B]) :- sciezka(A, B).
+
+pathC(A, B, L, [A | P]) :- sciezka(A,X), \+ member(X, L), pathC(X, B, [X|L], P).
+
+
+wszerz(D, Li) :- wszerz_h([D], Li).
+
+wszerz_h([], []).
+
+wszerz_h([nil|D], Li) :- wszerz_h(D, Li).
+
+wszerz_h([tree(L, W, R) | D], [W|Li]) :- append(D, [L, R], D2), wszerz_h(D2, Li).
+
+
+
+prawiBracia(T, W, Li) :- prawiBracia([T], [], W, Li).
+
+prawiBracia([], [X|S], W, Li) :- odwrotna2([X|S], S1), prawiBracia(S1, [], W, Li).
+
+prawiBracia([nil | T], S, W, Li) :- prawiBracia(T, S, W, Li).
+
+prawiBracia([tree(_, W, _) | T], _, W, Li) :- zbierzWartosci(T, Li).
+	
+prawiBracia([tree(L, _, R) | T], S, W, Li) :- prawiBracia(T, [R, L | S], W, Li).
+
+zbierzWartosci([], []).
+
+zbierzWartosci([nil | T], Li) :- zbierzWartosci(T, Li).
+
+zbierzWartosci([tree(_, W, _) | T], [W|Li]) :- zbierzWartosci(T, Li).
+
+
+graf([a,b,c,d]).
+sasiedzi(a, [b,c,d]).
+sasiedzi(b, [d]).
+sasiedzi(c, [d]).
+sasiedzi(d, []).
+
+
+odlegle(A, B, Li) :- odlegle([A], [], B, 0, Li).
+
+odlegle([], [], _, _, []).
+
+odlegle([], [X|S], B, D, Li) :- D1 is D + 1, odlegle([X|S], [], B, D1, Li).
+
+odlegle([nil | T], S, B, D, Li) :- odlegle(T, S, B, D, Li).
+
+odlegle([tree(L, B, R) | T], S, B, D, [D|Li]) :- odlegle(T, [R, L | S], B, D, Li).
+
+odlegle([tree(L, W, R) | T], S, B, D, Li) :- W \= B, odlegle(T, [R, L | S], B, D, Li).
+
+
+odlegle2(A, B, Li) :- graf(G), member(A,G), member(B, G), odlegle2([A], [], B, 0, Li).
+
+odlegle2([], [], _, _, []).
+
+odlegle2([], [X|S], B, D, Li) :- D1 is D + 1, odlegle2([X|S], [], B, D1, Li).
+
+odlegle2([B | T], S, B, D, [D|Li]) :- odlegle2(T, S, B, D, Li).
+
+odlegle2([W | T], S, B, D, Li) :- W \= B, sasiedzi(W, WS), append(WS, S, RS), odlegle2(T, RS, B, D, Li).
+
+
+zerowe(D, L) :- zbierz(D, V), zerowe(V, [], 0, L).
+
+zerowe([], L, 0, L).
+
+zerowe([W|V], A, S, L) :- S1 is S + W, zerowe(V, [W|A], S1, L).
+
+zerowe([_|V], A, S, L) :- zerowe(V, A, S, L).
+
+zbierz(nil, []).
+
+zbierz(tree(L, W, R), Li) :- zbierz(L, LLi), zbierz(R, RLi), append(LLi, [W|RLi], Li).
+
+
+drzewo(G, T) :- drzewo(G, [], [], [], From, From2, S), write(From), drzewo(S, From, From2, T).
+
+drzewo(S, F, F2, tree(T1, S, nil)) :- member([S, A], F), drzewo(A, F, F2, T1).
+
+drzewo(S, F, F2, tree(T1, S, T2)) :- member([S, A, B], F2), drzewo(A, F, F2, T1), drzewo(B, F, F2, T2).
+
+drzewo([], F, F2, T, F, F2, S) :- drzewoH(F, F2, T, [S]).
+
+drzewoH([], [], _, []).
+
+drzewoH([], [[X, _, _]|F2], T, R) :- member(X, T), drzewoH([], F2, T, R).
+
+drzewoH([], [[X, _, _]|F2], T, [X|R]) :- \+ member(X, T), drzewoH([], F2, T, R).
+
+drzewoH([[X, _] | F], F2, T, R) :- member(X, T), drzewoH(F, F2, T, R).
+
+drzewoH([[X, _] | F], F2, T, [X | R]) :- \+ member(X, T), drzewoH(F, F2, T, R).
+
+
+
+different(X, Y) :- notIn(X, Y, [S | R]), write(S), write(R).
+
+different(X, Y) :- notIn(Y, X, [_ | _]), write(1).
+
+notIn([W, N | X], Y, [W | R]) :- notIn(W, Y, [W]), notIn([N | X], Y, R).
+
+notIn([W, N | X], Y, R) :- notIn(W, Y, []), notIn([N | X], Y, R).
+
+notIn([W], [W | _], []) :- !.
+
+notIn([W], [], [W]).
+
+notIn([W], [_ | Y], R) :- notIn([W], Y, R).
+
+
+neighbours(a, [b,c,d]).
+neighbours(b, [e]).
+neighbours(c, [d]).
+neighbours(d, [a]).
+neighbours(e, [e]).
+
+
+cykle(V, W) :- osiagane(V, O), doSiebie(O, S), wybrane(S, V, W).
+
+wybrane([X | S], V, [X | W]) :- member(X, V), wybrane(S, V, W).
+
+wybrane([X | S], V, W) :- nonmember(X, V), wybrane(S, V, W).
+
+doSiebie([], []).
+
+doSiebie([[V, N] | O], [V | W]) :- member(V, N), doSiebie(O, W).
+
+doSiebie([[V, N] | O], W) :- nonmember(V, N), doSiebie(O, W).
+
+osiagane(V, O) :- osiagane(V, [], O).
+
+osiagane([], O, O).
+
+osiagane([X | V], A, O) :- osiagaj(X, A, O1), osiagane(V, O1, O).
+
+osiagaj(X, A, A) :- member([X | _], A).
+
+osiagaj(X, A, O) :- nonmember([X | _], A), neighbours(X, S), filterList(X, S, S1), osiagane(S1, A, O1), doloz(X, S1, O1, O).
+
+filterList(A, In, Out) :- member(A, In), append(B, [A|E], In), append(B, E, Out).
+
+filterList(A, In, In) :- nonmember(A, In).
+
+doloz(X, S, A, [[X, N] | A]) :- zbierz(S, A, N).
+
+zbierz(S, A, N) :- zbierz(S, A, [], N1), sort(N1, N).
+
+zbierz([], _, N, N).
+
+zbierz([X | S], A, NA, N) :- member([X, XN], A), append(XN, NA, RN), zbierz(S, A, RN, N).
