@@ -1,49 +1,41 @@
-/**
-        Jakub Kuklis jk371125
-*/
-
-% przestaw(L, W)
-% L - posortowana lista liczb
-% W - lista liczb z L posortowana po wartosci bezwzglednej
-
-przestaw([], []).
-
-przestaw([X|L], W) :- rozdziel([X|L], U, D), odwrotna(U, RU), sklej(RU, D, W).
+% Jakub Kuklis jk371125
 
 
-% sklej(U, D, P)
-% U - lista ujemnych liczb posortowana po w.b.
-% D - lista dodatnich liczb posortowana po w.b.
-% P - lista liczb z U i D posortowana po w.b.
+% krawedz(Od, Do, Wartosc)
 
-sklej([], D, D).
-
-sklej(U, [], U).
-
-sklej([X|U], [Y|D], [X|W]) :- X + Y >= 0, sklej(U, [Y|D], W).
-
-sklej([Y|U], [X|D], [X|W]) :- X + Y =< 0, sklej([Y|U], D, W).
+krawedz(A, B, W) :- sasiedzi(A, N), member(kr(B, W), N).
 
 
-% rozdziel(L, U, D)
-% L - posortowana lista liczb
-% U - lista ujemnych liczb z L posortowana po w.b.
-% D - lista dodatnich liczb z L posortowana po w.b.
+% sciezka(Od, Do, ParzystoscSciezki)
+% ParzystoscSciezki mowi o tym, jaka jest parzystosc sumy etykiet na sciezce
 
-rozdziel([], [], []).
-
-rozdziel([X|D], [], [X|D]) :- X >= 0.
-
-rozdziel([X|L], [X|U], D) :- X < 0, rozdziel(L, U, D).
+sciezka(A, B, W) :- sciezka(A, B, W, [A, B]).
 
 
-% odwrotna(L, R)
-% L - lista
-% R - lista odwrotna do L
+% sciezka(Od, Do, ParzystoscSciezki, Odwiedzone)
 
-odwrotna(L, R) :- odwrotna(L, [], R).
+sciezka(A, B, W, _) :- 
+	krawedz(A, B, W).
 
-odwrotna([], R, R).
+sciezka(A, B, W, V) :-
+	krawedz(A, C, W1),
+	\+ member(C, V),
+	sciezka(C, B, W2, [C | V]),
+	W3 is W1 + W2,
+	W is W3 mod 2.	
 
-odwrotna([X|L], A, R) :- odwrotna(L, [X|A], R).
 
+% osiagalne(WierzcholekStartowy, OsiagalneWierzcholki)
+
+osiagalne(W, L) :- graf(G), osiagalne(W, G, L).
+
+
+% osiagalne(WierzcholekStartowy, Pozostale, OsiagalneWierzcholkiZPozostalych)
+% OsiagalneWierzcholkiZPozostalych - wierzcholki z listy Pozostale, 
+% do ktorych istnieje sciezka z WierzcholelStartowy
+
+osiagalne(_, [], []).
+
+osiagalne(W, [X | G], [X | L]) :- sciezka(W, X, 1), !, osiagalne(W, G, L).
+
+osiagalne(W, [_ | G], L) :- osiagalne(W, G, L).
